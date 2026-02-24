@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode — slate & teal: crisp slate grays + teal brand */
+    --background: 210 40% 98%;         /* #f8fafc — slate-50 */
+    --foreground: 222 47% 11%;         /* #0f172a — slate-900, near-black */
+    --card: 0 0% 100%;                 /* pure white cards */
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 174 72% 40%;            /* #14b8a6 — teal-500 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 91%;          /* #e2e8f0 — slate-200 */
+    --secondary-foreground: 222 47% 20%;
+    --muted: 214 32% 91%;              /* slate-200 */
+    --muted-foreground: 215 16% 47%;   /* #64748b — slate-500, strong readable gray */
+    --accent: 174 60% 94%;             /* teal-50 hover */
+    --accent-foreground: 174 72% 25%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 89%;             /* #e2e8f0 — slate-200, visible edges */
+    --input: 214 32% 89%;
+    --ring: 174 72% 40%;
+    --radius: 0.625rem;
+    --sidebar: 0 0% 100%;              /* white sidebar */
+    --sidebar-foreground: 222 47% 11%; /* slate-900 text */
+    --sidebar-border: 214 32% 89%;     /* slate-200 border */
+    --sidebar-accent: 214 32% 94%;     /* slate-100 hover */
+  }
+
+  .dark {
+    --background: 240 6% 8%;         /* #111113 — zinc-950 neutral dark */
+    --foreground: 210 17% 92%;       /* #e8edf2 — cool off-white */
+    --card: 240 5% 11%;              /* #1a1a1e — zinc-900 card */
+    --card-foreground: 210 17% 92%;
+    --popover: 240 5% 11%;
+    --popover-foreground: 210 17% 92%;
+    --primary: 174 60% 50%;          /* #2dd4bf — teal-400, bright on dark */
+    --primary-foreground: 174 72% 8%;
+    --secondary: 240 5% 16%;         /* #252529 — zinc-800 */
+    --secondary-foreground: 210 14% 78%;
+    --muted: 240 5% 14%;             /* #202024 */
+    --muted-foreground: 215 12% 57%; /* #8a9ab0 — cool readable gray */
+    --accent: 174 30% 14%;           /* dark teal hover */
+    --accent-foreground: 174 60% 75%;
+    --destructive: 0 63% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 5% 17%;            /* #26262b — subtle neutral border */
+    --input: 240 5% 17%;
+    --ring: 174 60% 50%;
+    --sidebar: 240 6% 6%;            /* #0e0e11 — slightly darker than bg */
+    --sidebar-foreground: 210 17% 92%;
+    --sidebar-border: 240 5% 14%;
+    --sidebar-accent: 240 5% 14%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+
+  /* Dark color scheme for native date/time pickers */
+  .dark input[type="date"],
+  .dark input[type="datetime-local"],
+  .dark input[type="time"] {
+    color-scheme: dark;
+  }
+}
+
+@layer utilities {
+  /* Gradient text utility */
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-400 to-cyan-400 bg-clip-text text-transparent;
+  }
+
+  /* Glass card effect */
+  .glass {
+    @apply bg-card/50 backdrop-blur-sm border border-border/50;
+  }
+
+  /* Glow effect for primary elements */
+  .glow-primary {
+    box-shadow: 0 0 20px -5px hsl(174 72% 40% / 0.4);
+  }
+}

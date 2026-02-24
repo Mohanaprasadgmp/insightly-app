@@ -1,0 +1,301 @@
+// Insightly — Prisma Schema
+// PostgreSQL via Supabase
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Used for migrations with Supabase connection pooling
+}
+
+// ─────────────────────────────────────────────
+// AUTH MODELS (NextAuth.js / @auth/prisma-adapter)
+// ─────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─────────────────────────────────────────────
+// CORE BUSINESS MODELS
+// ─────────────────────────────────────────────
+
+/// Agency user — maps to a member of a marketing agency
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // Hashed, for credentials login
+  role          UserRole  @default(MEMBER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts   Account[]
+  sessions   Session[]
+  agency     AgencyMember[]
+  activities Activity[]
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+/// The agency organization — the B2B customer
+model Agency {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique // URL-safe identifier, e.g. "acme-digital"
+  logoUrl     String?
+  brandColor  String?  @default("#6366f1") // Primary brand color for white-label reports
+  website     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Stripe subscription
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+  planTier             PlanTier @default(FREE)
+  planExpiresAt        DateTime?
+
+  // Relations
+  members    AgencyMember[]
+  clients    Client[]
+  reports    Report[]
+  activities Activity[]
+}
+
+enum PlanTier {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+/// Junction table — a user belongs to one or more agencies
+model AgencyMember {
+  id        String   @id @default(cuid())
+  userId    String
+  agencyId  String
+  role      UserRole @default(MEMBER)
+  joinedAt  DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agency Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, agencyId])
+}
+
+/// The agency's end client — a business whose marketing is managed
+model Client {
+  id          String   @id @default(cuid())
+  agencyId    String
+  name        String
+  logoUrl     String?
+  website     String?
+  industry    String?
+  contactName String?
+  contactEmail String?
+  timezone    String   @default("UTC")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  agency      Agency       @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  dataSources DataSource[]
+  reports     Report[]
+}
+
+/// Connected data integration for a client (GA4, Meta Ads, etc.)
+model DataSource {
+  id           String           @id @default(cuid())
+  clientId     String
+  type         DataSourceType
+  name         String           // Display name, e.g. "GA4 – acme.com"
+  status       DataSourceStatus @default(PENDING)
+
+  // OAuth tokens (encrypted at rest in production)
+  accessToken  String?  @db.Text
+  refreshToken String?  @db.Text
+  tokenExpiry  DateTime?
+
+  // Provider-specific config (account IDs, property IDs, etc.)
+  config       Json     @default("{}")
+
+  // Sync metadata
+  lastSyncedAt DateTime?
+  syncError    String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+enum DataSourceType {
+  GOOGLE_ANALYTICS_4
+  META_ADS
+  GOOGLE_ADS
+  GOOGLE_SEARCH_CONSOLE
+  LINKEDIN_ADS
+}
+
+enum DataSourceStatus {
+  PENDING      // Not yet configured
+  CONNECTED    // Active and syncing
+  DISCONNECTED // Manually disconnected
+  ERROR        // Auth or fetch failure
+}
+
+/// A generated report for a client
+model Report {
+  id          String       @id @default(cuid())
+  agencyId    String
+  clientId    String
+  title       String       // e.g. "November 2024 Performance Report"
+  status      ReportStatus @default(DRAFT)
+
+  // Date range the report covers
+  periodStart DateTime
+  periodEnd   DateTime
+
+  // AI narrative summary (generated by Claude)
+  summary     String?  @db.Text
+
+  // White-label settings snapshot at time of generation
+  brandColor  String?
+  logoUrl     String?
+
+  // Delivery
+  recipientEmails String[] // Who the report was sent to
+  sentAt          DateTime?
+
+  // PDF asset
+  pdfUrl    String?  // URL to stored PDF (Supabase Storage)
+  pdfGenAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  agency   Agency          @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  client   Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  sections ReportSection[]
+}
+
+enum ReportStatus {
+  DRAFT      // Being assembled / edited
+  GENERATING // AI is writing the narrative
+  READY      // Generated, pending review
+  APPROVED   // Agency reviewed and approved
+  SENT       // Delivered to client
+  SCHEDULED  // Queued for future delivery
+}
+
+/// Individual section within a report (traffic, ads performance, etc.)
+model ReportSection {
+  id       String             @id @default(cuid())
+  reportId String
+  type     ReportSectionType
+  title    String
+  order    Int                // Display order within the report
+
+  // Raw metrics data fetched from the data source
+  rawData  Json   @default("{}")
+
+  // AI-generated narrative for this section
+  narrative String? @db.Text
+
+  // Whether this section was manually edited by the agency
+  isEdited  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, order])
+}
+
+enum ReportSectionType {
+  EXECUTIVE_SUMMARY
+  WEBSITE_TRAFFIC      // GA4
+  TOP_PAGES            // GA4
+  AUDIENCE_OVERVIEW    // GA4
+  PAID_SEARCH          // Google Ads
+  META_ADS_PERFORMANCE // Meta Ads
+  SOCIAL_ORGANIC       // Organic social
+  SEO_OVERVIEW         // Google Search Console
+  CUSTOM               // Manually added section
+}
+
+// ─────────────────────────────────────────────
+// ACTIVITY LOG
+// ─────────────────────────────────────────────
+
+model Activity {
+  id        String       @id @default(cuid())
+  agencyId  String
+  userId    String
+  type      ActivityType
+  entityId  String?      // ID of the related entity (clientId, reportId)
+  meta      Json         @default("{}") // e.g. { clientName, reportTitle }
+  createdAt DateTime     @default(now())
+
+  agency Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([agencyId, createdAt(sort: Desc)])
+}
+
+enum ActivityType {
+  CLIENT_CREATED
+  CLIENT_UPDATED
+  CLIENT_DELETED
+  REPORT_CREATED
+  REPORT_UPDATED
+  REPORT_GENERATED
+  REPORT_SENT
+  REPORT_DELETED
+}

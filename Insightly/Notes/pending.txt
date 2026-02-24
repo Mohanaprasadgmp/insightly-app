@@ -1,0 +1,7 @@
+What's planned but not built yet:
+
+Actually fetching data from GA4 / Meta Ads via OAuth
+AI narrative generation (Claude writes the report sections)
+PDF export and email delivery
+Stripe billing
+Background job scheduling (Trigger.dev)

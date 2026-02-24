@@ -1,0 +1,14 @@
+3. GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET
+Go to console.cloud.google.com
+Create a new project (top-left dropdown → New Project)
+In the left menu: APIs & Services → OAuth consent screen
+User type: External → fill in App name, support email → Save
+Go to APIs & Services → Credentials → Create Credentials → OAuth Client ID
+Application type: Web application
+Name: Insightly Dev
+Under Authorized redirect URIs, add:
+
+http://localhost:3000/api/auth/callback/google
+Click Create
+Copy the Client ID → GOOGLE_CLIENT_ID
+Copy the Client Secret → GOOGLE_CLIENT_SECRET
