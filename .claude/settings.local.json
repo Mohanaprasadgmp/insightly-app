@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(head:*)",
+      "Bash(cd \"/c/Learning/Personal/ai-workspace\" && npx tsc --noEmit 2>&1)",
+      "Bash(cd \"/c/Learning/Personal/ai-workspace\" && npm run build 2>&1)",
+      "Bash(cd \"/c/Learning/Personal/ai-workspace\" && npx prisma db push 2>&1)",
+      "Bash(cd \"/c/Learning/Personal/ai-workspace\" && npm run dev 2>&1)",
+      "Bash(taskkill:*)",
+      "Bash(ls \"c:\\\\Learning\\\\Personal\\\\insightly\\\\components\\\\reports\"\" 2>/dev/null || echo \"Directory not found \")",
+      "Bash(cat /c/Learning/Personal/insightly/app/\\\\\\(dashboard\\\\\\)/reports/[id]/page.tsx)",
+      "Bash(cat /c/Learning/Personal/insightly/app/\\\\\\(dashboard\\\\\\)/reports/[id]/AIReportCard.tsx)"
+    ],
+    "additionalDirectories": [
+      "C:\\Learning\\Personal\\insightly\\app\\api\\data-sources"
+    ]
+  }
+}
