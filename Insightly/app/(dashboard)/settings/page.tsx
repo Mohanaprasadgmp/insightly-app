@@ -14,9 +14,9 @@ const SETTINGS_TABS = [
   { id: "profile", label: "Profile", icon: User },
   { id: "agency", label: "Agency", icon: Building2 },
   { id: "branding", label: "Branding", icon: Palette },
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "billing", label: "Billing", icon: CreditCard },
-  { id: "security", label: "Security", icon: Shield },
+  // { id: "notifications", label: "Notifications", icon: Bell },
+  // { id: "billing", label: "Billing", icon: CreditCard },
+  // { id: "security", label: "Security", icon: Shield }, 
 ] as const;
 
 type SettingsTab = (typeof SETTINGS_TABS)[number]["id"];
@@ -64,10 +64,10 @@ export default function SettingsPage() {
           )}
           {activeTab === "agency" && <AgencySettings />}
           {activeTab === "branding" && <BrandingSettings />}
-          {activeTab === "billing" && <BillingSettings />}
+          {/* {activeTab === "billing" && <BillingSettings />}
           {(activeTab === "notifications" || activeTab === "security") && (
             <ComingSoonPanel />
-          )}
+          )} */}
         </div>
       </div>
     </div>

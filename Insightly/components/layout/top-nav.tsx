@@ -88,7 +88,7 @@ export function TopNav({ user, pageTitle }: TopNavProps) {
                 Profile
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
+            {/* <DropdownMenuItem asChild>
               <Link href="/settings/billing" className="cursor-pointer">
                 <CreditCard className="mr-2 h-4 w-4" />
                 Billing
@@ -99,7 +99,7 @@ export function TopNav({ user, pageTitle }: TopNavProps) {
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </Link>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive cursor-pointer"
